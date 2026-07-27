@@ -3,6 +3,9 @@
 Quick reference for the three analysis scripts built for the FOXG1 x HDAC1/HDAC2/HDAC6
 interface work, what each one physically measures, and what question it answers.
 
+See also `reading_lysine_contact_output.md` for how to interpret the three-block output of
+`lysine_contact_partners.py` (any-atom vs NZ-tip vs salt bridge).
+
 ## End-to-end workflow
 
 The full process from raw sequences to a researcher-ready report, in order:
@@ -19,7 +22,7 @@ flowchart TD
     G --> I[rank_lysine_interactions.py<br/>buried area + distance]
     H --> J[Specific HDAC residue per lysine]
     I --> K[Lysines ranked 1 to 5 by strength]
-    J --> L[Compile Word report for researchers]
+    J --> L[Compile Word report]
     K --> L
 ```
 
@@ -37,7 +40,7 @@ flowchart TD
    run `lysine_contact_partners.py` to find which specific HDAC residues sit nearby, and
    `rank_lysine_interactions.py` to rank them by buried surface area.
 7. **Compile the report** — screenshots, residue lists, and rankings go into the Word
-   document for the researchers.
+   document.
 
 ### Example: AlphaFold3 predicted complexes
 
