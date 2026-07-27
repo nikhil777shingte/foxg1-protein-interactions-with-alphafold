@@ -3,6 +3,42 @@
 Quick reference for the three analysis scripts built for the FOXG1 x HDAC1/HDAC2/HDAC6
 interface work, what each one physically measures, and what question it answers.
 
+## End-to-end workflow
+
+The full process from raw sequences to a researcher-ready report, in order:
+
+```mermaid
+flowchart TD
+    A[Get FOXG1 sequence<br/>UniProt P55316] --> C[Submit as a complex job<br/>AlphaFold3 Server]
+    B[Get HDAC sequence<br/>HDAC1 Q13547 / HDAC2 Q92769 / HDAC6 Q9UBN7] --> C
+    C --> D[Download output ZIP<br/>5 ranked models + confidence JSONs]
+    D --> E[Unzip locally]
+    E --> F[Run interfaceResidues .pml on model_0.cif<br/>buried surface area, cutoff 4.0 Sq Angstrom]
+    F --> G[Interface residue lists<br/>FOXG1 side + HDAC side]
+    G --> H[lysine_contact_partners.py<br/>distance, Angstrom]
+    G --> I[rank_lysine_interactions.py<br/>buried area + distance]
+    H --> J[Specific HDAC residue per lysine]
+    I --> K[Lysines ranked 1 to 5 by strength]
+    J --> L[Compile analysis report]
+    K --> L
+```
+
+1. **Get sequences from UniProt** — canonical FASTA for FOXG1 (P55316) and whichever HDAC
+   you're pairing it with (HDAC1 Q13547, HDAC2 Q92769, HDAC6 Q9UBN7).
+2. **Submit to AlphaFold3 Server** — both sequences as one multi-chain complex prediction
+   job.
+3. **Download the output ZIP** — AF3 returns 5 ranked models (`model_0` through `model_4`),
+   each with a `summary_confidences` and `full_data` JSON (ipTM, PAE, etc.).
+4. **Unzip locally** into a working folder.
+5. **Run interface detection** — the `.pml` script (`interfaceResidues`) on `model_0.cif` to
+   get the pass/fail interface residue lists for both chains (buried surface area, Å²
+   cutoff).
+6. **Drill into specific residues** — for lysines of interest (e.g. the 5 shared ones),
+   run `lysine_contact_partners.py` to find which specific HDAC residues sit nearby, and
+   `rank_lysine_interactions.py` to rank them by buried surface area.
+7. **Compile the report** — screenshots, residue lists, and rankings go into the analysis
+   document.
+
 ## Summary table
 
 | Script | Measures | Units | Answers |
