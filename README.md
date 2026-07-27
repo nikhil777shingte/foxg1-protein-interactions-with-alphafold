@@ -19,7 +19,7 @@ flowchart TD
     G --> I[rank_lysine_interactions.py<br/>buried area + distance]
     H --> J[Specific HDAC residue per lysine]
     I --> K[Lysines ranked 1 to 5 by strength]
-    J --> L[Compile analysis report]
+    J --> L[Compile Word report for researchers]
     K --> L
 ```
 
@@ -36,8 +36,32 @@ flowchart TD
 6. **Drill into specific residues** — for lysines of interest (e.g. the 5 shared ones),
    run `lysine_contact_partners.py` to find which specific HDAC residues sit nearby, and
    `rank_lysine_interactions.py` to rank them by buried surface area.
-7. **Compile the report** — screenshots, residue lists, and rankings go into the analysis
-   document.
+7. **Compile the report** — screenshots, residue lists, and rankings go into the Word
+   document for the researchers.
+
+### Example: AlphaFold3 predicted complexes
+
+What step 2-3 actually produces — the raw predicted complex, before any interface analysis:
+
+**FOXG1-HDAC1**
+![FOXG1-HDAC1 AlphaFold3 predicted complex](images/foxg1_hdac1_af3_overview.png)
+
+**FOXG1-HDAC2**
+![FOXG1-HDAC2 AlphaFold3 predicted complex](images/foxg1_hdac2_af3_overview.png)
+
+**FOXG1-HDAC6**
+![FOXG1-HDAC6 AlphaFold3 predicted complex](images/foxg1_hdac6_af3_overview.png)
+
+### Example: PyMOL interface highlighting
+
+What step 5 produces — the same complexes after `interfaceResidues` picks out and highlights
+the contact patch:
+
+**FOXG1-HDAC1 interface**
+![FOXG1-HDAC1 PyMOL interface highlight](images/foxg1_hdac1_pymol_interface.png)
+
+**FOXG1-HDAC2 interface**
+![FOXG1-HDAC2 PyMOL interface highlight](images/foxg1_hdac2_pymol_interface.png)
 
 ## Summary table
 
@@ -136,3 +160,13 @@ FOXG1-HDAC6 (wild-type) predicted interfaces. Note: in one HDAC6 analysis, K15 w
 a spatially separate contact region ("bottom" interface, FOXG1 N-terminal region) from the
 other four (K181/K237/K241/K272, "top" interface, FOXG1 C-terminal region) — i.e. not
 literally one shared contact patch for that complex.
+
+### FOXG1-HDAC6 low-confidence region check
+
+Close-up from the combined FOXG1-HDAC6 analysis, showing the region flagged as low-confidence
+(residues VAL407/ASN408/LEU409 on FOXG1, GLU890-GLY894 on HDAC6). Worth checking whether any
+of the 5 shared lysines fall in a similarly flagged region before treating that contact as
+fully confirmed.
+
+![FOXG1-HDAC6 low-confidence region close-up](images/foxg1_hdac6_lowconf_closeup.png)
+
