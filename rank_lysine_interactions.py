@@ -40,6 +40,12 @@ USAGE
         --lysines 15,181,237,241,272 \
         --label HDAC1
 
+    # to see why a lysine's BSA is 0.0 or suspiciously high, add --show-atoms:
+    python rank_lysine_interactions.py \
+        --cif fold_foxg1_hdac1_model_0.cif \
+        --foxg1-chain A --hdac-chain B \
+        --label HDAC1 --show-atoms
+
 Run once per complex (HDAC1 / HDAC2 / HDAC6) and compare the three ranked
 tables side by side.
 
@@ -69,7 +75,12 @@ def per_residue_bsa(cmd, foxg1_chain, hdac_chain, lysines):
     """Total per-residue buried surface area (isolated - complex SASA),
     summed over all atoms of each target lysine. Same physical quantity
     dASA/interfaceResidues checks per-atom, but totaled per residue here
-    for a continuous, rankable number instead of a pass/fail flag."""
+    for a continuous, rankable number instead of a pass/fail flag.
+
+    Also returns the per-atom breakdown (name -> delta) for each lysine,
+    since totals can mask cancellation between atoms that gain vs lose
+    accessibility -- useful for sanity-checking a suspiciously low or
+    suspiciously high total."""
     cmd.create("tempC", f"m and polymer and (chain {foxg1_chain} or chain {hdac_chain})")
     cmd.get_area("tempC", load_b=1)
     cmd.alter("tempC", "q=b")
@@ -80,17 +91,38 @@ def per_residue_bsa(cmd, foxg1_chain, hdac_chain, lysines):
     cmd.alter("chA or chB", "b=b-q")
 
     space = {"rows": []}
-    cmd.iterate("chA or chB", "rows.append((chain, int(resi), resn, b))",
+    cmd.iterate("chA or chB", "rows.append((chain, int(resi), resn, name, b))",
                 space=space)
 
     totals = {}
-    for chain, resi, resn, b in space["rows"]:
+    atoms = {}
+    for chain, resi, resn, name, b in space["rows"]:
         if chain == foxg1_chain and resi in lysines:
             totals[resi] = totals.get(resi, 0.0) + b
+            atoms.setdefault(resi, []).append((name, b))
 
     for tmp in ("tempC", "chA", "chB"):
         cmd.delete(tmp)
-    return totals
+    return totals, atoms
+
+
+def print_atom_breakdown(lysines, atoms, label):
+    print(f"\n=== Per-atom buried area breakdown vs {label} ===")
+    print("(positive = atom lost solvent exposure / buried; negative = atom")
+    print(" appears to gain exposure -- an artifact of isolating the chains,")
+    print(" not a real physical change. Large cancellation between the two")
+    print(" is a sign the residue-total BSA is unreliable for that lysine.)\n")
+    for k in lysines:
+        rows = sorted(atoms.get(k, []), key=lambda r: -r[1])
+        total = sum(b for _, b in rows)
+        print(f"K{k}  (total = {total:.2f} A2)")
+        if not rows:
+            print("  (no atoms found -- check --lysines / chain / numbering)")
+            continue
+        for name, b in rows:
+            sign = "+" if b >= 0 else ""
+            print(f"    {name:<5} {sign}{b:6.2f} A2")
+        print()
 
 
 def contact_metrics(cmd, foxg1_chain, hdac_chain, lysines, cutoff, salt_cutoff):
@@ -157,6 +189,11 @@ def main():
     ap.add_argument("--salt-cutoff", type=float, default=4.0)
     ap.add_argument("--label", default="", help="e.g. HDAC1 -- cosmetic, for CSV name")
     ap.add_argument("--csv", default=None, help="optional output CSV path")
+    ap.add_argument("--show-atoms", action="store_true",
+                    help="print per-atom buried-area breakdown for each lysine "
+                         "(use this to check whether a low/zero total is real "
+                         "or the result of positive and negative atom deltas "
+                         "cancelling out)")
     args = ap.parse_args()
 
     lysines = [int(x) for x in args.lysines.split(",")]
@@ -165,7 +202,7 @@ def main():
         cmd = p.cmd
         cmd.load(args.cif, "m")
 
-        bsa = per_residue_bsa(cmd, args.foxg1_chain, args.hdac_chain, lysines)
+        bsa, bsa_atoms = per_residue_bsa(cmd, args.foxg1_chain, args.hdac_chain, lysines)
         contacts = contact_metrics(cmd, args.foxg1_chain, args.hdac_chain,
                                    lysines, args.cutoff, args.salt_cutoff)
 
@@ -202,6 +239,9 @@ def main():
               f"{r['n_contact_atoms']:<11}"
               f"{str(r['min_any_dist']):<10}{str(r['min_nz_dist']):<10}"
               f"{r['nz_partner']:<16}{r['salt_bridge']}")
+
+    if args.show_atoms:
+        print_atom_breakdown(lysines, bsa_atoms, label)
 
     if args.csv:
         with open(args.csv, "w", newline="") as f:

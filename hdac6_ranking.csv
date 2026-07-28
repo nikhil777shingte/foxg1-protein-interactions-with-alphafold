@@ -1,0 +1,6 @@
+rank,lysine,buried_area_A2,n_contact_atoms,min_any_dist,min_nz_dist,nz_partner,salt_bridge
+1,K272,25.4,70,2.16,2.35,TRP101:CE2,ASP169 (3.89 A)
+2,K181,6.0,16,1.71,1.71,ASP169:O,no
+3,K15,5.7,19,1.87,1.87,ASN565:O,no
+4,K241,3.7,13,2.36,2.36,GLU279:OE2,GLU279 (2.36 A)
+5,K237,0.0,10,3.24,3.95,TYR386:O,no

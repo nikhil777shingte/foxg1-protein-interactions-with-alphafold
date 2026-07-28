@@ -1,0 +1,6 @@
+rank,lysine,buried_area_A2,n_contact_atoms,min_any_dist,min_nz_dist,nz_partner,salt_bridge
+1,K15,2.2,7,2.61,2.61,GLU146:OE1,GLU146 (2.61 A)
+2,K181,2.0,12,2.69,2.69,GLN92:O,no
+3,K237,0.0,3,3.42,4.16,ARG270:NH2,no
+4,K272,0.0,1,3.53,3.53,MET91:CE,no
+5,K241,0.0,0,,,-,no
